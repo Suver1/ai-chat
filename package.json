@@ -19,10 +19,12 @@
     "pnpm": "10.12.4"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.11",
     "@tanstack/react-router": "1.125.3",
     "@tanstack/react-start": "1.125.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.11",
     "vite": "^7.0.2",
     "zod": "^3.25.75"
   },

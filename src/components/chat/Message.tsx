@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SubmitButton, TextArea } from '~/components/form'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod/v4'
@@ -17,18 +17,32 @@ export const postMessage = createServerFn({ method: 'POST' })
     return `Hello! You said: ${message}`
   })
 
-const isValidMessage = (message: string) => {
-  return messageSchema.safeParse(message).success
-}
-
 export default function Message() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [canSubmit, setCanSubmit] = useState(true)
   const [error, setError] = useState('')
   const formRef = useRef<HTMLFormElement>(null)
+  const textAreaRef = useRef<HTMLTextAreaElement>(null)
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  useEffect(() => {
+    const textArea = textAreaRef.current
+    if (!textArea) return
+
+    const keydownHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault()
+        handleSubmit()
+      }
+    }
+
+    textArea.addEventListener('keydown', keydownHandler)
+    return () => {
+      textArea.removeEventListener('keydown', keydownHandler)
+    }
+  }, [])
+
+  const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>) => {
+    e?.preventDefault()
 
     const formData = new FormData(formRef.current!)
     const result = messageSchema.safeParse(formData.get('message'))
@@ -58,13 +72,22 @@ export default function Message() {
   return (
     <form ref={formRef} onSubmit={handleSubmit}>
       {error && <div style={{ color: 'red' }}>{error}</div>}
-      <TextArea label="Message" name="message" />
 
-      <SubmitButton
-        label="Submit"
-        isSubmitting={isSubmitting}
-        canSubmit={canSubmit}
+      <TextArea
+        label="Message"
+        name="message"
+        placeholder="Type your message here..."
+        ref={textAreaRef}
       />
+
+      <div className="flex justify-between">
+        <div> </div>
+        <SubmitButton
+          label="Send"
+          isSubmitting={isSubmitting}
+          canSubmit={canSubmit}
+        />
+      </div>
     </form>
   )
 }

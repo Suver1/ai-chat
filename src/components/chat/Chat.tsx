@@ -2,10 +2,10 @@ import Message from './Message'
 
 export default function Chat() {
   return (
-    <div>
-      <h1>Chat</h1>
-      <p>This is the chat page.</p>
-      <Message />
+    <div className="bg-chat-input-background bg-chat-input-foreground">
+      <div className="p-2 border-2 rounded-md">
+        <Message />
+      </div>
     </div>
   )
 }

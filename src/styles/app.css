@@ -1,0 +1,94 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Catppuccin Macchiato pallete */
+  --crust: 236 23% 12%;
+  --mantle: 233 23% 15%;
+  --base: 232 23% 18%;
+  --surface0: 230 19% 26%;
+  --surface1: 231 16% 34%;
+  --surface2: 230 14% 41%;
+  --overlay0: 230 12% 49%;
+  --overlay1: 228 15% 57%;
+  --overlay2: 228 20% 65%;
+  --subtext0: 227 27% 72%;
+  --subtext1: 228 39% 80%;
+  --text: 227 68% 88%;
+  --lavender: 234 82% 85%;
+  --blue: 220 83% 75%;
+  --sapphire: 199 66% 69%;
+  --sky: 189 59% 73%;
+  --teal: 171 47% 69%;
+  --green: 105 48% 72%;
+  --yellow: 40 70% 78%;
+  --peach: 21 86% 73%;
+  --maroon: 355 71% 77%;
+  --red: 351 74% 73%;
+  --mauve: 267 83% 80%;
+  --pink: 316 74% 85%;
+  --flamingo: 0 58% 86%;
+  --rosewater: 10 58% 90%;
+
+  /*
+  --secondary:
+  --secondary-foreground:
+  --accent:
+  --accent-foreground:
+  --border:
+  --input:
+  --radius:
+  --sidebar-primary:
+  --sidebar-primary-foreground
+  --sidebar-accent:
+  --sidebar-accent-foreground:
+  --sidebar-border:
+  --chat-border:
+  --chat-accent:
+  --chat-overlay:
+  */
+  --primary: var(--mauve);
+  --primary-foreground: var(--base);
+  --sidebar-background: var(--mantle);
+  --sidebar-foreground: var(--text);
+  --chat-background: var(--base);
+  --chat-foreground: var(--text);
+  --chat-input-background: var(--surface0);
+  --chat-input-foreground: var(--text);
+  --chat-input-border: var(--surface1);
+}
+
+.bg-primary {
+  background-color: hsl(var(--primary));
+}
+.bg-primary-foreground {
+  color: hsl(var(--primary-foreground));
+}
+
+.bg-sidebar-background {
+  background-color: hsl(var(--sidebar-background));
+}
+.bg-sidebar-foreground {
+  color: hsl(var(--sidebar-foreground));
+}
+
+.bg-chat-background {
+  background-color: hsl(var(--chat-background));
+}
+
+.bg-chat-foreground {
+  color: hsl(var(--chat-foreground));
+}
+
+.bg-chat-input-background {
+  background-color: hsl(var(--chat-input-background));
+}
+
+.bg-chat-input-foreground {
+  color: hsl(var(--chat-input-foreground));
+}
+
+.bg-chat-input-border {
+  border-color: hsla(var(--chat-input-border) / 0.2);
+}
