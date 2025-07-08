@@ -3,7 +3,7 @@ import Chat from '~/components/chat/Chat'
 import ChatMessages from '~/components/chat/ChatMessages'
 import Menu from '~/components/menu/Menu'
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute('/$')({
   ssr: true,
   component: Home,
 })
