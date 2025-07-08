@@ -4,16 +4,29 @@ export default function ChatMessages() {
   const history = useChatStore((state) => state.history)
   const isLoading = useChatStore((state) => state.isLoading)
 
+  // msg.text can be a string, markdown or whatever.
+  // split it into paragraphs if needed.
+  const formatMessage = (msg: string) => {
+    if (typeof msg === 'string') {
+      return msg.split('\n').map((line, index) => (
+        <span key={index} className="block">
+          {line}
+        </span>
+      ))
+    }
+    return msg
+  }
+
   return (
     <>
       {history.map((msg, index) => (
         <p
           key={index}
-          className={`flex ${
+          className={`flex flex-col ${
             msg.role === 'user' ? 'justify-end' : 'justify-start'
           }`}
         >
-          {msg.text}
+          {formatMessage(msg.text)}
         </p>
       ))}
       {isLoading && (

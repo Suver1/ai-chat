@@ -24,6 +24,7 @@ export const postMessage = createServerFn({
         abortSignal: signal,
       },
     })
+
     const stream = new ReadableStream({
       async start(controller) {
         try {

@@ -1,3 +1,4 @@
+import { useNavigate, useLocation } from '@tanstack/react-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { SubmitButton, TextAreaSimple } from '~/components/form'
 import { messageSchema, postMessage } from '~/serverFn/chat'
@@ -19,6 +20,9 @@ export default function Message() {
   const addMessage = useChatStore((state) => state.addMessage)
   const setIsChatLoading = useChatStore((state) => state.setIsLoading)
 
+  const loaction = useLocation()
+  const navigate = useNavigate()
+
   useEffect(() => {
     const textArea = textAreaRef.current
     if (!textArea) return
@@ -35,6 +39,15 @@ export default function Message() {
       textArea.removeEventListener('keydown', keydownHandler)
     }
   }, [])
+
+  const updateChatRoute = useCallback(
+    (id: string) => {
+      if (loaction.pathname !== '/chat/') {
+        navigate({ to: `/chat/${id}`, replace: true })
+      }
+    },
+    [loaction, navigate]
+  )
 
   const handleTextChunk = useCallback(
     (textChunk: string) => {
@@ -66,6 +79,9 @@ export default function Message() {
     setError('')
     let reader: ReadableStreamDefaultReader | null = null
     let ctrl = new AbortController()
+
+    // TODO get ID from server
+    updateChatRoute(crypto.randomUUID())
 
     try {
       const response = await postMessage({
