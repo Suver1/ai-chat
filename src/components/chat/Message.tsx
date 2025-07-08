@@ -1,21 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { SubmitButton, TextAreaSimple } from '~/components/form'
-import { createServerFn } from '@tanstack/react-start'
-import { z } from 'zod/v4'
-
-const messageSchema = z.string().trim().min(1, 'Message is required')
-const defaultError = 'Failed to submit message'
-
-export const postMessage = createServerFn({ method: 'POST' })
-  .validator((data) => {
-    if (!(data instanceof FormData)) {
-      throw new Error('Invalid form data')
-    }
-    return messageSchema.parse(data.get('message'))
-  })
-  .handler(async ({ data: message }) => {
-    return `Hello! You said: ${message}`
-  })
+import { messageSchema, postMessage } from '~/serverFn/chat'
+import { useChatStore } from '~/state/chat'
+import {
+  isDataChunk,
+  isErrorChunk,
+  parseDataChunk,
+  parseErrorChunk,
+} from '~/utils/stream'
 
 export default function Message() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -23,6 +15,9 @@ export default function Message() {
   const [error, setError] = useState('')
   const formRef = useRef<HTMLFormElement>(null)
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
+  const appendMessage = useChatStore((state) => state.appendMessage)
+  const addMessage = useChatStore((state) => state.addMessage)
+  const setIsChatLoading = useChatStore((state) => state.setIsLoading)
 
   useEffect(() => {
     const textArea = textAreaRef.current
@@ -31,7 +26,7 @@ export default function Message() {
     const keydownHandler = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
         e.preventDefault()
-        handleSubmit()
+        handleStreamSubmit()
       }
     }
 
@@ -41,7 +36,20 @@ export default function Message() {
     }
   }, [])
 
-  const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>) => {
+  const handleTextChunk = useCallback(
+    (textChunk: string) => {
+      if (isDataChunk(textChunk)) {
+        appendMessage(parseDataChunk(textChunk))
+      } else if (isErrorChunk(textChunk)) {
+        setError(parseErrorChunk(textChunk))
+      } else {
+        throw new Error('Unexpected chunk format: ' + textChunk)
+      }
+    },
+    [appendMessage, setError]
+  )
+
+  const handleStreamSubmit = async (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault()
 
     const formData = new FormData(formRef.current!)
@@ -50,27 +58,56 @@ export default function Message() {
       setError(result.error.issues[0].message)
       return
     }
-
-    setError('')
-    setCanSubmit(false)
+    addMessage(result.data)
+    formRef.current?.reset()
+    setIsChatLoading(true)
     setIsSubmitting(true)
+    setCanSubmit(false)
+    setError('')
+    let reader: ReadableStreamDefaultReader | null = null
+    let ctrl = new AbortController()
 
     try {
-      const response = await postMessage({ data: formData })
-      console.log('Response:', response)
-      formRef.current?.reset()
-      setError('')
-    } catch (error) {
-      setError(defaultError)
-      console.warn(defaultError + ':', error)
-    }
+      const response = await postMessage({
+        signal: ctrl.signal,
+        data: formData,
+      })
+      if (!response.ok || !response.body) {
+        setError('Failed to connect to stream')
+        return
+      }
+      reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let done = false
 
-    setCanSubmit(true)
-    setIsSubmitting(false)
+      while (!done) {
+        const { value, done: streamDone } = await reader.read()
+        done = streamDone
+        if (value) {
+          const textChunk = decoder.decode(value, { stream: !done })
+          handleTextChunk(textChunk)
+        }
+      }
+
+      // flush any remaining data
+      const chunkRemains = decoder.decode()
+      if (chunkRemains) {
+        handleTextChunk(chunkRemains)
+      }
+    } catch (err) {
+      setError(
+        'Streaming error: ' + (err instanceof Error ? err.message : String(err))
+      )
+    } finally {
+      reader?.releaseLock()
+      setIsChatLoading(false)
+      setIsSubmitting(false)
+      setCanSubmit(true)
+    }
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit}>
+    <form ref={formRef} onSubmit={handleStreamSubmit}>
       {error && (
         <div className="error mb-0.5" role="alert">
           {error}
