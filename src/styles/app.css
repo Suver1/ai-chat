@@ -57,6 +57,7 @@
   --chat-input-background: var(--surface0);
   --chat-input-foreground: var(--text);
   --chat-input-border: var(--surface1);
+  --error: var(--red);
 }
 
 .bg-primary {
@@ -91,4 +92,8 @@
 
 .bg-chat-input-border {
   border-color: hsla(var(--chat-input-border) / 0.2);
+}
+
+.error {
+  color: hsl(var(--error));
 }

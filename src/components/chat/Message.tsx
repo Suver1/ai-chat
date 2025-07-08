@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { SubmitButton, TextArea } from '~/components/form'
+import { SubmitButton, TextAreaSimple } from '~/components/form'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod/v4'
 
@@ -71,10 +71,14 @@ export default function Message() {
 
   return (
     <form ref={formRef} onSubmit={handleSubmit}>
-      {error && <div style={{ color: 'red' }}>{error}</div>}
+      {error && (
+        <div className="error mb-0.5" role="alert">
+          {error}
+        </div>
+      )}
 
-      <TextArea
-        label="Message"
+      <TextAreaSimple
+        accessibleLabel="Message"
         name="message"
         placeholder="Type your message here..."
         ref={textAreaRef}

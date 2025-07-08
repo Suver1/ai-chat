@@ -9,7 +9,7 @@ export function Button({ label, onClick, className }: Props) {
     <button
       className={`${
         className || ''
-      } w-full p-2 rounded bg-primary bg-primary-foreground`}
+      } w-full p-2 rounded bg-primary bg-primary-foreground cursor-pointer`}
       type="button"
       onClick={onClick}
     >

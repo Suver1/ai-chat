@@ -8,7 +8,7 @@ export function SubmitButton({ label, isSubmitting, canSubmit }: Props) {
     <button
       type="submit"
       disabled={!canSubmit}
-      className="p-2 rounded bg-primary bg-primary-foreground"
+      className="p-2 rounded bg-primary bg-primary-foreground cursor-pointer"
     >
       {isSubmitting ? '...' : label}
     </button>
