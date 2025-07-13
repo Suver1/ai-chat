@@ -1,10 +1,12 @@
 import { useChatStore } from '~/state/chat'
 import { Button } from '../form/Button'
 import { useCallback } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { useChatListStore } from '~/state/chatList'
 
 export default function Menu() {
   const clearMessages = useChatStore((state) => state.clearMessages)
+  const chatList = useChatListStore((state) => state.chatList)
   const navigate = useNavigate()
 
   const onNewChat = useCallback(() => {
@@ -24,6 +26,21 @@ export default function Menu() {
         </header>
         <div>
           <Button label="New chat" onClick={onNewChat} />
+        </div>
+        <div>
+          <ul className="list-none p-0 m-0">
+            {chatList.map((chat) => (
+              <li key={chat.chatId} className="">
+                <Link
+                  // @ts-expect-error path exists due to wildcard route
+                  to={`/chat/${chat.chatId}`}
+                  className="block p-2 rounded-md"
+                >
+                  {chat.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>

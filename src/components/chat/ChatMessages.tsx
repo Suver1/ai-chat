@@ -17,13 +17,14 @@ export default function ChatMessages() {
     return msg
   }
 
+  console.log('history', history)
   return (
     <>
       {history.map((msg, index) => (
         <p
           key={index}
           className={`flex flex-col ${
-            msg.role === 'user' ? 'justify-end' : 'justify-start'
+            msg.role === 'user' ? 'items-end' : 'items-start'
           }`}
         >
           {formatMessage(msg.text)}
