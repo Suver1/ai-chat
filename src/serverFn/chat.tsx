@@ -8,6 +8,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '~/db/connection'
 import { messagesTable } from '~/db/schema'
 import { extractTextAndSummary } from '~/utils/string'
+import { notFound } from '@tanstack/react-router'
 
 type Content = {
   type: 'text'
@@ -149,9 +150,7 @@ export const generateChatId = createServerFn({
     return userIdSchema.parse(data)
   })
   .handler(async ({ data: { userId } }) => {
-    console.log('Received user ID:', userId)
     const chatId = crypto.randomUUID()
-    console.log('Generated chat ID:', chatId)
     await db.insert(messagesTable).values({
       id: chatId,
       userId,
@@ -185,7 +184,7 @@ export const getChatById = createServerFn({
       .where(eq(messagesTable.id, chatId))
     const chat = chatResult[0]
     if (!chat) {
-      // 404
+      throw notFound()
     }
 
     const response: ChatByIdResponse = {

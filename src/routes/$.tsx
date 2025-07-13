@@ -4,6 +4,7 @@ import z from 'zod/v4'
 import Chat from '~/components/chat/Chat'
 import ChatMessages from '~/components/chat/ChatMessages'
 import Menu from '~/components/menu/Menu'
+import PageNotFound from '~/components/PageNotFound'
 import { getChatById } from '~/serverFn/chat'
 import { getChatList } from '~/serverFn/chatList'
 import { useChatStore } from '~/state/chat'
@@ -25,6 +26,7 @@ export const Route = createFileRoute('/$')({
 
     return { chatList, chat }
   },
+  notFoundComponent: PageNotFound,
 })
 
 function Home() {

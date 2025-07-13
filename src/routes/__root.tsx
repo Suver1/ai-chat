@@ -7,6 +7,8 @@ import {
   Scripts,
 } from '@tanstack/react-router'
 import appCss from '../styles/app.css?url'
+import Error from '~/components/Error'
+import PageNotFound from '~/components/PageNotFound'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -30,8 +32,8 @@ export const Route = createRootRoute({
     ],
   }),
   component: RootComponent,
-  notFoundComponent: () => <div>Page not found</div>,
-  errorComponent: () => <div>Something went wrong</div>,
+  notFoundComponent: PageNotFound,
+  errorComponent: Error,
 })
 
 function RootComponent() {
