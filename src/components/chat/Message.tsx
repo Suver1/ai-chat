@@ -106,11 +106,11 @@ export default function Message() {
       }
       formData.set('chatId', chatId)
       updateChatRoute(chatId)
-      console.log('Generated chat ID:', chatId)
     }
     const modelNameResult = modelNameSchema.safeParse(formData.get('model'))
     if (!modelNameResult.success) {
       setError(modelNameResult.error.issues[0].message)
+      console.error('modelNameResult:', modelNameResult.error)
       return
     }
     formData.set('model', modelNameResult.data)
@@ -118,6 +118,7 @@ export default function Message() {
     const messageResult = messageSchema.safeParse(formData.get('message'))
     if (!messageResult.success) {
       setError(messageResult.error.issues[0].message)
+      console.error('messageResult:', messageResult.error)
       return
     }
     addMessage(messageResult.data)
@@ -213,7 +214,7 @@ export default function Message() {
       <div className="flex justify-between">
         <div>
           <select
-            name="model "
+            name="model"
             value={selectedModel}
             onChange={handleModelChange}
           >

@@ -9,6 +9,8 @@ import { db } from '~/db/connection'
 import { messagesTable } from '~/db/schema'
 import { extractTextAndSummary } from '~/utils/string'
 import { notFound } from '@tanstack/react-router'
+import { handleAnthropicChunk } from './utils/anthropic'
+import { handleGeminiChunk } from './utils/gemini'
 
 type Content = {
   type: 'text'
@@ -70,56 +72,38 @@ const messagesToAnthropicMessages = (messages: Messages): AnthropicMessages => {
   }))
 }
 
-const getResponseByModel = (
-  model: ModelName,
-  messages: Messages,
-  signal: AbortSignal
-) => {
-  if (model === 'gemini-2.5-flash') {
-    const ai = new GoogleGenAI({ apiKey: process.env['GEMINI_API_KEY'] })
-    return ai.models.generateContentStream({
-      model,
-      contents: messagesToGeminiContents(messages),
-      config: {
-        abortSignal: signal,
-        maxOutputTokens: 400,
-        temperature: 0.3,
-      },
-    })
-  } else if (model === 'claude-3-5-haiku-20241022') {
-    const ai = new Anthropic({ apiKey: process.env['ANTHROPIC_API_KEY'] })
-    return ai.messages.stream(
-      {
-        model,
-        max_tokens: 400,
-        temperature: 0.3,
-        messages: messagesToAnthropicMessages(messages),
-      },
-      {
-        signal,
-      }
-    )
-  }
-  throw new Error(`Unsupported model: ${model}`)
-}
-
-// async function main() {
-//   const response = await ai.models.generateContent({
-//     model: 'gemini-2.0-flash',
-//     contents: 'How does AI work?',
-//   })
-//   console.log(response.text)
-
-//   const msg = await anthropic.messages.create({
-//     model: 'claude-3-5-haiku-20241022',
-//     max_tokens: 200,
-//     temperature: 0.3,
-//     messages: [],
-//   })
-//   console.log(msg)
+// const getResponseByModel = (
+//   model: ModelName,
+//   messages: Messages,
+//   signal: AbortSignal
+// ) => {
+//   if (model === 'gemini-2.5-flash') {
+//     const ai = new GoogleGenAI({ apiKey: process.env['GEMINI_API_KEY'] })
+//     return ai.models.generateContentStream({
+//       model,
+//       contents: messagesToGeminiContents(messages),
+//       config: {
+//         abortSignal: signal,
+//         maxOutputTokens: 400,
+//         temperature: 0.3,
+//       },
+//     })
+//   } else if (model === 'claude-3-5-haiku-20241022') {
+//     const ai = new Anthropic({ apiKey: process.env['ANTHROPIC_API_KEY'] })
+//     return ai.messages.stream(
+//       {
+//         model,
+//         max_tokens: 400,
+//         temperature: 0.3,
+//         messages: messagesToAnthropicMessages(messages),
+//       },
+//       {
+//         signal,
+//       }
+//     )
+//   }
+//   throw new Error(`Unsupported model: ${model}`)
 // }
-
-// await main()
 
 export const messageSchema = z.string().trim().min(1, 'Message is required')
 
@@ -190,7 +174,7 @@ export const getChatById = createServerFn({
     const response: ChatByIdResponse = {
       chatId: chat.id,
       name: chat.name,
-      messages: messagesSchema.parse(chat.messages),
+      messages: messagesSchema.nullable().parse(chat.messages) || [],
     }
     return response
   })
@@ -228,6 +212,7 @@ export const postMessage = createServerFn({
     if (!(formData instanceof FormData)) {
       throw new Error('Invalid form data')
     }
+    console.log('Validate', Object.fromEntries(formData.entries()))
     return existingChatSchema.parse(Object.fromEntries(formData.entries()))
   })
   .handler(async ({ signal, data }) => {
@@ -257,11 +242,7 @@ export const postMessage = createServerFn({
       messages = [...history, messageToDbMessage(data.message, 'user')]
     }
 
-    // write chat message to db
     await appendToDbMessages(chatId, messages)
-    // generate message with history for the selected model
-
-    // call ai and stream
 
     // const response = getResponseByModel(data.model, messages, signal)
 
@@ -270,85 +251,114 @@ export const postMessage = createServerFn({
     //   messages,
     //   signal
     // )
-    // response is type Promise<AsyncGenerator<GenerateContentResponse, any, any>> | MessageStream
 
     const messagesForAi = messagesWithSummary || messages
 
-    const ai = new Anthropic({ apiKey: process.env['ANTHROPIC_API_KEY'] })
-    // if isNew prepend messages with "In addition to your response for the
-    // user question below, provide a short one-sentence summary
-    // of the conversation. Put the summary in the
-    // following schema: ```summary: <summary>```"
+    let stream: ReadableStream<any>
 
-    const response = ai.messages.stream(
-      {
-        model: 'claude-3-5-haiku-20241022',
-        max_tokens: 400,
-        temperature: 0.3,
-        messages: messagesToAnthropicMessages(messagesForAi),
-      },
-      {
-        signal,
-      }
-    )
-    // response is type MessageStream
+    if (data.model.startsWith('claude-')) {
+      const ai = new Anthropic({ apiKey: process.env['ANTHROPIC_API_KEY'] })
+      const response = ai.messages.stream(
+        {
+          model: data.model,
+          max_tokens: 400,
+          temperature: 0.3,
+          messages: messagesToAnthropicMessages(messagesForAi),
+        },
+        {
+          signal,
+        }
+      )
+      // response is type MessageStream
 
-    const handleAnthropicChunk = (
-      chunk: Anthropic.Messages.RawMessageStreamEvent
-    ) => {
-      if (
-        chunk.type === 'content_block_start' &&
-        chunk.content_block.type === 'text'
-      ) {
-        return chunk.content_block.text
-      } else if (
-        chunk.type === 'content_block_delta' &&
-        chunk.delta.type === 'text_delta'
-      ) {
-        return chunk.delta.text
-      }
-      return ''
+      stream = new ReadableStream({
+        async start(controller) {
+          let textToStore = ''
+          try {
+            for await (const chunk of response) {
+              console.debug('Received chunk:', chunk)
+              let text = handleAnthropicChunk(chunk)
+              if (!text || text.length === 0) {
+                console.log('Received empty text, skipping')
+                continue
+              }
+              controller.enqueue(new TextEncoder().encode(`data: ${text}\n\n`))
+              textToStore += text
+              if (signal.aborted) break
+            }
+          } catch (err) {
+            controller.enqueue(
+              new TextEncoder().encode(`event: error\ndata: ${String(err)}\n\n`)
+            )
+          } finally {
+            console.log('textToStore:', textToStore)
+            if (textToStore.length > 0) {
+              console.log('Appending message to db:', textToStore)
+
+              const [textWithoutSummary, summary] =
+                extractTextAndSummary(textToStore)
+              const newHistory = [
+                ...messages,
+                messageToDbMessage(textWithoutSummary, 'model'),
+              ]
+              await appendToDbMessages(chatId, newHistory, summary)
+            }
+            controller.close()
+          }
+        },
+      })
+    } else if (data.model.startsWith('gemini-')) {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+      const response = await ai.models.generateContentStream({
+        model: data.model,
+        contents: messagesToGeminiContents(messagesForAi),
+        config: {
+          maxOutputTokens: 400,
+          abortSignal: signal,
+        },
+      })
+      // response is type Promise<AsyncGenerator<GenerateContentResponse, any, any>>
+
+      stream = new ReadableStream({
+        async start(controller) {
+          let textToStore = ''
+          try {
+            for await (const chunk of response) {
+              console.debug('Received chunk:', chunk)
+              let text = handleGeminiChunk(chunk)
+              if (!text || text.length === 0) {
+                console.log('Received empty text, skipping')
+                continue
+              }
+              controller.enqueue(new TextEncoder().encode(`data: ${text}\n\n`))
+              textToStore += text
+              if (signal.aborted) break
+            }
+          } catch (err) {
+            controller.enqueue(
+              new TextEncoder().encode(`event: error\ndata: ${String(err)}\n\n`)
+            )
+          } finally {
+            console.log('textToStore:', textToStore)
+            if (textToStore.length > 0) {
+              console.log('Appending message to db:', textToStore)
+
+              const [textWithoutSummary, summary] =
+                extractTextAndSummary(textToStore)
+              const newHistory = [
+                ...messages,
+                messageToDbMessage(textWithoutSummary, 'model'),
+              ]
+              await appendToDbMessages(chatId, newHistory, summary)
+            }
+            controller.close()
+          }
+        },
+      })
+    } else {
+      throw new Error(`Unsupported model: ${data.model}`)
     }
 
-    const stream = new ReadableStream({
-      async start(controller) {
-        let textToStore = ''
-        try {
-          for await (const chunk of response) {
-            // On response: Add output to chat history in db
-            console.debug('Received chunk:', chunk)
-            let text = handleAnthropicChunk(chunk)
-            if (!text || text.length === 0) {
-              console.log('Received empty text, skipping')
-              continue
-            }
-            controller.enqueue(new TextEncoder().encode(`data: ${text}\n\n`))
-            textToStore += text
-            if (signal.aborted) break
-          }
-        } catch (err) {
-          controller.enqueue(
-            new TextEncoder().encode(`event: error\ndata: ${String(err)}\n\n`)
-          )
-        } finally {
-          console.log('textToStore:', textToStore)
-          if (textToStore.length > 0) {
-            console.log('Appending message to db:', textToStore)
-
-            const [textWithoutSummary, summary] =
-              extractTextAndSummary(textToStore)
-            const newHistory = [
-              ...messages,
-              messageToDbMessage(textWithoutSummary, 'model'),
-            ]
-            await appendToDbMessages(chatId, newHistory, summary)
-          }
-          controller.close()
-        }
-      },
-    })
-
-    // return streamed response to client
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
@@ -356,44 +366,6 @@ export const postMessage = createServerFn({
         Connection: 'keep-alive',
       },
     })
-
-    // return new Response(`Chat ID: ${chatId}`)
-
-    // const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
-    // const response = await ai.models.generateContentStream({
-    //   model: 'gemini-2.0-flash',
-    //   contents: message,
-    //   config: {
-    //     maxOutputTokens: 200,
-    //     abortSignal: signal,
-    //   },
-    // })
-
-    // const stream = new ReadableStream({
-    //   async start(controller) {
-    //     try {
-    //       for await (const chunk of response) {
-    //         controller.enqueue(
-    //           new TextEncoder().encode(`data: ${chunk.text}\n\n`)
-    //         )
-    //         if (signal.aborted) break
-    //       }
-    //     } catch (err) {
-    //       controller.enqueue(
-    //         new TextEncoder().encode(`event: error\ndata: ${String(err)}\n\n`)
-    //       )
-    //     } finally {
-    //       controller.close()
-    //     }
-    //   },
-    // })
-    // return new Response(stream, {
-    //   headers: {
-    //     'Content-Type': 'text/event-stream',
-    //     'Cache-Control': 'no-cache',
-    //     Connection: 'keep-alive',
-    //   },
-    // })
   })
 
 export const streamEvents = createServerFn({
