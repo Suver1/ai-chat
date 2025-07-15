@@ -1,8 +1,12 @@
 import { createServerFn } from '@tanstack/react-start'
-import { userIdSchema } from './chat'
 import { db } from '~/db/connection'
 import { messagesTable } from '~/db/schema'
 import { eq, desc } from 'drizzle-orm'
+import z from 'zod/v4'
+
+const userIdSchema = z.object({
+  userId: z.uuidv4(),
+})
 
 export type ChatListItem = {
   chatId: string

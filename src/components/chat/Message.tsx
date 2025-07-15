@@ -3,7 +3,7 @@ import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react'
 import z from 'zod/v4'
 import { SubmitButton, TextAreaSimple } from '~/components/form'
 import { ModelName, modelNameSchema, models } from '~/constants/ai-models'
-import { generateChatId, messageSchema, postMessage } from '~/serverFn/chat'
+import { generateChatId, postMessage } from '~/serverFn/chat'
 import { useChatStore } from '~/state/chat'
 import { useChatListStore } from '~/state/chatList'
 import {
@@ -14,6 +14,7 @@ import {
 } from '~/utils/stream'
 import { extractTextAndSummary } from '~/utils/string'
 import useSelectedModel from '~/hooks/useModel'
+import { messageSchema } from '~/utils/input'
 
 export default function Message() {
   const [isSubmitting, setIsSubmitting] = useState(false)
