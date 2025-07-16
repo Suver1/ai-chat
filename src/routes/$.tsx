@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import z from 'zod/v4'
 import Chat from '~/components/chat/Chat'
@@ -14,9 +14,11 @@ export const Route = createFileRoute('/$')({
   ssr: 'data-only',
   component: Home,
   loader: async ({ location }) => {
+    console.log('LOADING', location)
     const chatList = await getChatList({
       data: { userId: '2f643d7f-ffe9-4b0a-87ba-40198838805a' },
     })
+    console.log('LOADING', chatList)
 
     if (!location.pathname.includes('/chat/')) {
       return { chatList }
@@ -36,6 +38,7 @@ function Home() {
 
   useEffect(() => {
     if (state?.chatList) {
+      console.log('set state.chatList', state.chatList)
       setChatList(state.chatList)
       console.log('Chat list loaded:', state.chatList)
     }

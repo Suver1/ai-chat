@@ -10,6 +10,7 @@ import { notFound } from '@tanstack/react-router'
 import { Message, messagesSchema } from './utils/internal'
 import { getAdapterForModel } from './utils/provider'
 import { messageSchema, userIdSchema } from '~/utils/input'
+import { SUMMARY_PROMPT } from '~/constants/summary'
 
 const modelSchema = z.enum(modelNames, {
   error: 'Invalid model name',
@@ -129,10 +130,8 @@ export const postMessage = createServerFn({
     if (!history || history.length === 0) {
       messages = [messageToDbMessage(data.message, 'user')]
 
-      const summaryMessage =
-        'In addition to your response for the user question below, end your response with a short one-sentence (ideally 2-4 words) summary of the conversation so far to be used in a heading. Put it in the following schema: ```summary: <summary>```'
       messagesWithSummary = [
-        messageToDbMessage(summaryMessage + data.message, 'user'),
+        messageToDbMessage(SUMMARY_PROMPT + ' ' + data.message, 'user'),
       ]
     } else {
       messages = [...history, messageToDbMessage(data.message, 'user')]
@@ -157,9 +156,7 @@ export const postMessage = createServerFn({
             }
             console.log('Received streamChunk:', chunk)
             if (chunk.type === 'text') {
-              controller.enqueue(
-                new TextEncoder().encode(`data: ${chunk.data}\n\n`)
-              )
+              controller.enqueue(new TextEncoder().encode(chunk.data))
               textToStore += chunk.data
             }
           })

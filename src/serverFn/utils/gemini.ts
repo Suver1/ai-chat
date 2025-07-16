@@ -40,7 +40,7 @@ export class GeminiAdapter implements AIProviderAdapter {
       model: this.model,
       contents: messagesToGeminiContents(messages),
       config: {
-        maxOutputTokens: 1024,
+        maxOutputTokens: 8192,
         abortSignal: signal,
         temperature: 0.3,
       },

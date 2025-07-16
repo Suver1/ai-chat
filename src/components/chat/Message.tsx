@@ -6,15 +6,11 @@ import { ModelName, modelNameSchema, models } from '~/constants/ai-models'
 import { generateChatId, postMessage } from '~/serverFn/chat'
 import { useChatStore } from '~/state/chat'
 import { useChatListStore } from '~/state/chatList'
-import {
-  isDataChunk,
-  isErrorChunk,
-  parseDataChunk,
-  parseErrorChunk,
-} from '~/utils/stream'
+import { isErrorChunk, parseErrorChunk } from '~/utils/stream'
 import { extractTextAndSummary } from '~/utils/string'
 import useSelectedModel from '~/hooks/useModel'
 import { messageSchema } from '~/utils/input'
+import { SUMMARY_START } from '~/constants/summary'
 
 export default function Message() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -65,13 +61,11 @@ export default function Message() {
 
   const handleTextChunk = useCallback(
     (textChunk: string) => {
-      if (isDataChunk(textChunk)) {
-        appendMessage(parseDataChunk(textChunk))
-      } else if (isErrorChunk(textChunk)) {
+      if (isErrorChunk(textChunk)) {
         setError(parseErrorChunk(textChunk))
-      } else {
-        throw new Error('Unexpected chunk format: ' + textChunk)
+        return
       }
+      appendMessage(textChunk)
     },
     [appendMessage, setError]
   )
@@ -160,8 +154,8 @@ export default function Message() {
               previousTexts.shift()
             }
             console.log('previousTexts:', previousTexts)
-            previousTexts.push(parseDataChunk(textChunk))
-            if (!isSummary && previousTexts.join('').includes('```summary:')) {
+            previousTexts.push(textChunk)
+            if (!isSummary && previousTexts.join('').includes(SUMMARY_START)) {
               isSummary = true
               stripSummary()
             }
@@ -174,7 +168,7 @@ export default function Message() {
       const chunkRemains = decoder.decode()
       if (chunkRemains) {
         console.log('chunkRemains:', chunkRemains)
-        previousTexts.push(parseDataChunk(chunkRemains))
+        previousTexts.push(chunkRemains)
         if (!isSummary) {
           handleTextChunk(chunkRemains)
         }
@@ -183,6 +177,7 @@ export default function Message() {
       if (isSummary) {
         const [_, summary] = extractTextAndSummary(previousTexts.join(''))
         setName(summary)
+        console.log('add to chat list', summary)
         addToChatList({ chatId, name: summary })
       }
     } catch (err) {

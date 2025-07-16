@@ -7,6 +7,7 @@ import { useChatListStore } from '~/state/chatList'
 export default function Menu() {
   const clearMessages = useChatStore((state) => state.clearMessages)
   const chatList = useChatListStore((state) => state.chatList)
+  console.log('chatList', chatList)
   const navigate = useNavigate()
 
   const onNewChat = useCallback(() => {

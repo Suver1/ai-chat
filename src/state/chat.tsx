@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { models } from '~/constants/ai-models'
+import { SUMMARY_START } from '~/constants/summary'
 
 type Role = 'user' | 'model'
 
@@ -57,20 +58,16 @@ export const useChatStore = create<ChatState>((set) => ({
   stripSummary: () =>
     set((state) => {
       const newHistory = [...state.history]
-      console.log('newHistory', newHistory)
       const lastHistory = newHistory.pop()
-      console.log('lastHistory', lastHistory)
       if (!lastHistory?.text) {
         return state
       }
-      if (lastHistory?.text.includes('```summary:')) {
-        console.log("text.includes('```summary:')", true)
-        const parts = lastHistory.text.split('```summary:')
+      if (lastHistory?.text.includes(SUMMARY_START)) {
+        const parts = lastHistory.text.split(SUMMARY_START)
         lastHistory.text = parts[0].trim()
       }
 
       newHistory.push(lastHistory)
-      console.log('newHistory', newHistory)
       return { history: newHistory }
     }),
   clearMessages: () => set({ history: [] }),
