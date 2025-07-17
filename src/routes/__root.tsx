@@ -7,6 +7,7 @@ import {
   Scripts,
 } from '@tanstack/react-router'
 import appCss from '../styles/app.css?url'
+import googleSignIn from '../styles/google-sign-in.css?url'
 import Error from '~/components/error'
 import PageNotFound from '~/components/PageNotFound'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -30,6 +31,10 @@ export const Route = createRootRoute({
       {
         rel: 'stylesheet',
         href: appCss,
+      },
+      {
+        rel: 'stylesheet',
+        href: googleSignIn,
       },
     ],
   }),

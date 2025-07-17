@@ -58,6 +58,7 @@
   --chat-input-foreground: var(--text);
   --chat-input-border: var(--surface1);
   --error: var(--red);
+  --link: var(--blue);
 }
 
 .bg-primary {
@@ -96,4 +97,14 @@
 
 .error {
   color: hsl(var(--error));
+}
+
+.link {
+  color: hsl(var(--link));
+  text-decoration: underline;
+}
+
+.link:hover {
+  color: hsla(var(--link) / 0.8);
+  text-decoration: none;
 }
