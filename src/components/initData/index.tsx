@@ -24,6 +24,7 @@ export default function InitData({ children }: PropsWithChildren) {
     queryKey: ['chatList'],
     queryFn: () =>
       getChatList({ data: { userId: '2f643d7f-ffe9-4b0a-87ba-40198838805a' } }),
+    retry: 0,
   })
 
   const {
@@ -37,6 +38,7 @@ export default function InitData({ children }: PropsWithChildren) {
       return getChatById({ data: { chatId } })
     },
     enabled: location.pathname.includes('/chat/'),
+    retry: 0,
   })
 
   useEffect(() => {

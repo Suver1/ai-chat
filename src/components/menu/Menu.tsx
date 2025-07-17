@@ -3,12 +3,13 @@ import { Button } from '../form/Button'
 import { useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import ChatList from '../chatList/ChatList'
+import Auth from '../auth/Auth'
 
 export default function Menu() {
   const clearMessages = useChatStore((state) => state.clearMessages)
   const navigate = useNavigate()
 
-  const onNewChat = useCallback(() => {
+  const onNewChat = useCallback(async () => {
     console.log('Start new chat')
     clearMessages()
     // @ts-ignore /new exists due to wildcard route
@@ -28,6 +29,9 @@ export default function Menu() {
         </div>
         <div>
           <ChatList />
+        </div>
+        <div>
+          <Auth />
         </div>
       </div>
     </div>

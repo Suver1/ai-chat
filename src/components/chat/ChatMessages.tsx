@@ -1,13 +1,18 @@
 import { useChatStore } from '~/state/chat'
 import Loader from '../loader'
 
+const isChatNotFound = (error: unknown) => {
+  if (error && typeof error === 'object' && 'isNotFound' in error) {
+    return error.isNotFound
+  }
+  return false
+}
+
 export default function ChatMessages() {
   const history = useChatStore((state) => state.history)
   const isLoading = useChatStore((state) => state.isLoading)
   const error = useChatStore((state) => state.error)
 
-  // msg.text can be a string, markdown or whatever.
-  // split it into paragraphs if needed.
   const formatMessage = (msg: string) => {
     if (typeof msg === 'string') {
       return msg.split('\n').map((line, index) => (
@@ -33,11 +38,16 @@ export default function ChatMessages() {
         </p>
       ))}
       {isLoading && <Loader />}
-      {error && (
-        <p className="error" role="alert">
-          Error: Failed to load chat
-        </p>
-      )}
+      {error &&
+        (isChatNotFound(error) ? (
+          <p className="error" role="alert">
+            Error: Chat not found
+          </p>
+        ) : (
+          <p className="error" role="alert">
+            Error: Failed to load messages
+          </p>
+        ))}
     </>
   )
 }

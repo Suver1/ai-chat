@@ -4,7 +4,7 @@ import z from 'zod/v4'
 import { modelNames } from '~/constants/ai-models'
 import { eq } from 'drizzle-orm'
 import { db } from '~/db/connection'
-import { messagesTable } from '~/db/schema'
+import { chatTable } from '~/db/schema/chat'
 import { extractTextAndSummary } from '~/utils/string'
 import { notFound } from '@tanstack/react-router'
 import { Message, messagesSchema } from './utils/internal'
@@ -32,7 +32,7 @@ export const generateChatId = createServerFn({
   .handler(async ({ data: { userId } }) => {
     const chatId = crypto.randomUUID()
     console.log('Generating new chat ID:', chatId)
-    await db.insert(messagesTable).values({
+    await db.insert(chatTable).values({
       id: chatId,
       userId,
     })
@@ -61,8 +61,8 @@ export const getChatById = createServerFn({
 
     const chatResult = await db
       .select()
-      .from(messagesTable)
-      .where(eq(messagesTable.id, chatId))
+      .from(chatTable)
+      .where(eq(chatTable.id, chatId))
     const chat = chatResult[0]
     if (!chat) {
       throw notFound()
@@ -93,12 +93,12 @@ const appendToDbMessages = async (
 ) => {
   const name = summary && summary.length > 0 ? { name: summary } : {}
   return await db
-    .update(messagesTable)
+    .update(chatTable)
     .set({
       messages: messagesSchema.parse(history),
       ...name,
     })
-    .where(eq(messagesTable.id, chatId))
+    .where(eq(chatTable.id, chatId))
 }
 
 export const postMessage = createServerFn({
@@ -119,8 +119,8 @@ export const postMessage = createServerFn({
     // get chat history from db
     const chatResult = await db
       .select()
-      .from(messagesTable)
-      .where(eq(messagesTable.id, chatId))
+      .from(chatTable)
+      .where(eq(chatTable.id, chatId))
     const chat = chatResult[0]
 
     const history = chat.messages as Message[] | null

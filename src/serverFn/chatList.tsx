@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { db } from '~/db/connection'
-import { messagesTable } from '~/db/schema'
+import { chatTable } from '~/db/schema/chat'
 import { eq, desc } from 'drizzle-orm'
 import z from 'zod/v4'
 
@@ -26,10 +26,10 @@ export const getChatList = createServerFn({
     const userId = data.userId
 
     const chatListResult: ChatListResponse = await db
-      .select({ chatId: messagesTable.id, name: messagesTable.name })
-      .from(messagesTable)
-      .where(eq(messagesTable.userId, userId))
-      .orderBy(desc(messagesTable.updatedAt))
+      .select({ chatId: chatTable.id, name: chatTable.name })
+      .from(chatTable)
+      .where(eq(chatTable.userId, userId))
+      .orderBy(desc(chatTable.updatedAt))
 
     return chatListResult
   })
