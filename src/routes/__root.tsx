@@ -7,8 +7,10 @@ import {
   Scripts,
 } from '@tanstack/react-router'
 import appCss from '../styles/app.css?url'
-import Error from '~/components/Error'
+import Error from '~/components/error'
 import PageNotFound from '~/components/PageNotFound'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import InitData from '~/components/initData'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -36,10 +38,16 @@ export const Route = createRootRoute({
   errorComponent: Error,
 })
 
+const queryClient = new QueryClient()
+
 function RootComponent() {
   return (
     <RootDocument>
-      <Outlet />
+      <QueryClientProvider client={queryClient}>
+        <InitData>
+          <Outlet />
+        </InitData>
+      </QueryClientProvider>
     </RootDocument>
   )
 }

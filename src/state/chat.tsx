@@ -13,9 +13,11 @@ interface ChatState {
   model: (typeof models)[number]['name']
   history: History[]
   isLoading: boolean
+  error: unknown
   name: string
   setName: (name: string) => void
   setIsLoading: (isLoading: boolean) => void
+  setError: (error: unknown) => void
   initHistory: (messages: History[]) => void
   addMessage: (message: string) => void
   appendMessage: (textChunk: string) => void
@@ -27,9 +29,11 @@ export const useChatStore = create<ChatState>((set) => ({
   model: 'gemini-2.5-flash',
   history: [],
   isLoading: false,
+  error: undefined,
   name: '',
   setName: (name) => set({ name }),
   setIsLoading: (isLoading) => set({ isLoading }),
+  setError: (error) => set({ error }),
   initHistory: (messages: History[]) => set({ history: messages }),
   addMessage: (message) =>
     set((state) => ({

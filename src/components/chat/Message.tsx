@@ -50,15 +50,6 @@ export default function Message() {
     updateSelectedModel(e.target.value as ModelName)
   }, [])
 
-  const updateChatRoute = useCallback(
-    (id: string) => {
-      if (location.pathname !== '/chat/') {
-        navigate({ to: `/chat/${id}`, replace: true })
-      }
-    },
-    [location, navigate]
-  )
-
   const handleTextChunk = useCallback(
     (textChunk: string) => {
       if (isErrorChunk(textChunk)) {
@@ -100,7 +91,7 @@ export default function Message() {
         return
       }
       formData.set('chatId', chatId)
-      updateChatRoute(chatId)
+      navigate({ to: `/chat/${chatId}`, replace: true })
     }
     const modelNameResult = modelNameSchema.safeParse(formData.get('model'))
     if (!modelNameResult.success) {

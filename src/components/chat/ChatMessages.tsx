@@ -1,8 +1,10 @@
 import { useChatStore } from '~/state/chat'
+import Loader from '../loader'
 
 export default function ChatMessages() {
   const history = useChatStore((state) => state.history)
   const isLoading = useChatStore((state) => state.isLoading)
+  const error = useChatStore((state) => state.error)
 
   // msg.text can be a string, markdown or whatever.
   // split it into paragraphs if needed.
@@ -30,13 +32,10 @@ export default function ChatMessages() {
           {formatMessage(msg.text)}
         </p>
       ))}
-      {isLoading && (
-        <p className="flex justify-center p-2">
-          <span
-            className="inline-block w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
-            role="status"
-            aria-label="Loading"
-          ></span>
+      {isLoading && <Loader />}
+      {error && (
+        <p className="error" role="alert">
+          Error: Failed to load chat
         </p>
       )}
     </>
