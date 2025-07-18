@@ -1,13 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { getSession } from '~/auth/authClient'
 
 export const Route = createFileRoute('/_authed')({
   beforeLoad: async ({ context }) => {
     console.log({ context })
-    const session = await getSession()
-    console.log('Session:', session)
-    // TODO Add session to context
-    if (!session.data) {
+    if (!context || !context.session) {
       throw new Error('Not authenticated')
     }
   },

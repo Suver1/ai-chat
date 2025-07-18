@@ -1,15 +1,8 @@
-import { createFileRoute, useLocation } from '@tanstack/react-router'
-import { useEffect } from 'react'
-import z from 'zod/v4'
+import { createFileRoute } from '@tanstack/react-router'
 import Chat from '~/components/chat/Chat'
 import ChatMessages from '~/components/chat/ChatMessages'
 import Menu from '~/components/menu/Menu'
 import PageNotFound from '~/components/PageNotFound'
-import { getChatById } from '~/serverFn/chat'
-import { getChatList } from '~/serverFn/chatList'
-import { useChatStore } from '~/state/chat'
-import { useChatListStore } from '~/state/chatList'
-import { useQuery } from '@tanstack/react-query'
 
 export const Route = createFileRoute('/$')({
   ssr: false,

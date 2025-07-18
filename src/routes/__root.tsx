@@ -8,12 +8,17 @@ import {
 } from '@tanstack/react-router'
 import appCss from '../styles/app.css?url'
 import googleSignIn from '../styles/google-sign-in.css?url'
-import Error from '~/components/error'
+import DefaultCatchBoundary from '~/components/DefaultCatchBoundary'
 import PageNotFound from '~/components/PageNotFound'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import InitData from '~/components/initData'
+import { fetchUser } from '~/serverFn/user'
 
 export const Route = createRootRoute({
+  beforeLoad: async () => {
+    // We need to auth on the server so we have access to secure cookies
+    return await fetchUser()
+  },
   head: () => ({
     meta: [
       {
@@ -40,7 +45,7 @@ export const Route = createRootRoute({
   }),
   component: RootComponent,
   notFoundComponent: PageNotFound,
-  errorComponent: Error,
+  errorComponent: DefaultCatchBoundary,
 })
 
 const queryClient = new QueryClient()

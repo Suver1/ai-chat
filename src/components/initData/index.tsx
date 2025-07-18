@@ -6,6 +6,7 @@ import { getChatList } from '~/serverFn/chatList'
 import { useChatStore } from '~/state/chat'
 import { useChatListStore } from '~/state/chatList'
 import z from 'zod/v4'
+import { useSession } from '~/auth/authClient'
 
 export default function InitData({ children }: PropsWithChildren) {
   const location = useLocation()
@@ -15,6 +16,7 @@ export default function InitData({ children }: PropsWithChildren) {
   const initHistory = useChatStore((state) => state.initHistory)
   const setChatIsLoading = useChatStore((state) => state.setIsLoading)
   const setChatError = useChatStore((state) => state.setError)
+  const session = useSession()
 
   const {
     data: chatList,
@@ -22,9 +24,9 @@ export default function InitData({ children }: PropsWithChildren) {
     isLoading: isChatListLoading,
   } = useQuery({
     queryKey: ['chatList'],
-    queryFn: () =>
-      getChatList({ data: { userId: '2f643d7f-ffe9-4b0a-87ba-40198838805a' } }),
+    queryFn: () => getChatList(),
     retry: 0,
+    enabled: !!session?.data?.user?.id,
   })
 
   const {
@@ -37,7 +39,7 @@ export default function InitData({ children }: PropsWithChildren) {
       const chatId = z.uuidv4().parse(location.pathname.split('/').pop())
       return getChatById({ data: { chatId } })
     },
-    enabled: location.pathname.includes('/chat/'),
+    enabled: location.pathname.includes('/chat/') && !!session?.data?.user?.id,
     retry: 0,
   })
 

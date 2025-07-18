@@ -24,6 +24,16 @@ export default function Auth() {
         <div>
           Logged in as
           <br />
+          <Link
+            to="/$"
+            className="link"
+            onClick={(e) => {
+              e.preventDefault()
+              socialSignOut()
+            }}
+          >
+            {`<-`}
+          </Link>{' '}
           <Link to="/profile">{data.user.name || data.user.email}</Link>
         </div>
       ) : (

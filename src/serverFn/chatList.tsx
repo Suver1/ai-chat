@@ -2,11 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { db } from '~/db/connection'
 import { chatTable } from '~/db/schema/chat'
 import { eq, desc } from 'drizzle-orm'
-import z from 'zod/v4'
-
-const userIdSchema = z.object({
-  userId: z.uuidv4(),
-})
+import { authMiddleware } from './middleware/auth'
 
 export type ChatListItem = {
   chatId: string
@@ -19,11 +15,9 @@ export const getChatList = createServerFn({
   method: 'GET',
   response: 'data',
 })
-  .validator((data) => {
-    return userIdSchema.parse(data)
-  })
-  .handler(async ({ data }) => {
-    const userId = data.userId
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const userId = context.user.id
 
     const chatListResult: ChatListResponse = await db
       .select({ chatId: chatTable.id, name: chatTable.name })

@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import z from 'zod/v4'
 
 import { modelNames } from '~/constants/ai-models'
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import { db } from '~/db/connection'
 import { chatTable } from '~/db/schema/chat'
 import { extractTextAndSummary } from '~/utils/string'
@@ -11,6 +11,7 @@ import { Message, messagesSchema } from './utils/internal'
 import { getAdapterForModel } from './utils/provider'
 import { messageSchema, userIdSchema } from '~/utils/input'
 import { SUMMARY_PROMPT } from '~/constants/summary'
+import { authMiddleware } from './middleware/auth'
 
 const modelSchema = z.enum(modelNames, {
   error: 'Invalid model name',
@@ -26,15 +27,13 @@ export const generateChatId = createServerFn({
   method: 'POST',
   response: 'data',
 })
-  .validator((data) => {
-    return userIdSchema.parse(data)
-  })
-  .handler(async ({ data: { userId } }) => {
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
     const chatId = crypto.randomUUID()
     console.log('Generating new chat ID:', chatId)
     await db.insert(chatTable).values({
       id: chatId,
-      userId,
+      userId: context.user.id,
     })
     return chatId
   })
@@ -53,16 +52,19 @@ export const getChatById = createServerFn({
   method: 'GET',
   response: 'data',
 })
+  .middleware([authMiddleware])
   .validator((data) => {
     return chatIdSchema.parse(data)
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const chatId = data.chatId
 
     const chatResult = await db
       .select()
       .from(chatTable)
-      .where(eq(chatTable.id, chatId))
+      .where(
+        and(eq(chatTable.id, chatId), eq(chatTable.userId, context.user.id))
+      )
     const chat = chatResult[0]
     if (!chat) {
       throw notFound()
@@ -88,6 +90,7 @@ const messageToDbMessage = (
 
 const appendToDbMessages = async (
   chatId: string,
+  userId: string,
   history: Message[],
   summary?: string
 ) => {
@@ -98,13 +101,14 @@ const appendToDbMessages = async (
       messages: messagesSchema.parse(history),
       ...name,
     })
-    .where(eq(chatTable.id, chatId))
+    .where(and(eq(chatTable.id, chatId), eq(chatTable.userId, userId)))
 }
 
 export const postMessage = createServerFn({
   method: 'POST',
   response: 'raw',
 })
+  .middleware([authMiddleware])
   .validator((formData) => {
     if (!(formData instanceof FormData)) {
       throw new Error('Invalid form data')
@@ -112,15 +116,16 @@ export const postMessage = createServerFn({
     console.log('Validate', Object.fromEntries(formData.entries()))
     return existingChatSchema.parse(Object.fromEntries(formData.entries()))
   })
-  .handler(async ({ signal, data }) => {
+  .handler(async ({ context, data, signal }) => {
     console.log('Received message:', data)
     const chatId = data.chatId
+    const userId = context.user.id
 
     // get chat history from db
     const chatResult = await db
       .select()
       .from(chatTable)
-      .where(eq(chatTable.id, chatId))
+      .where(and(eq(chatTable.id, chatId), eq(chatTable.userId, userId)))
     const chat = chatResult[0]
 
     const history = chat.messages as Message[] | null
@@ -137,7 +142,7 @@ export const postMessage = createServerFn({
       messages = [...history, messageToDbMessage(data.message, 'user')]
     }
 
-    await appendToDbMessages(chatId, messages)
+    await appendToDbMessages(chatId, userId, messages)
 
     const messagesForAi = messagesWithSummary || messages
 
@@ -174,7 +179,7 @@ export const postMessage = createServerFn({
               ...messages,
               messageToDbMessage(textWithoutSummary, 'model'),
             ]
-            await appendToDbMessages(chatId, newHistory, summary)
+            await appendToDbMessages(chatId, userId, newHistory, summary)
           }
           controller.close()
         }
