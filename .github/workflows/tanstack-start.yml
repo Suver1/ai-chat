@@ -30,17 +30,27 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build Tanstack Start app
         run: pnpm run build
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-          BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      - name: Write .env.production
+        run: |
+          cat <<EOF > .output/.env.production
+          GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
+          ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}"
+          DATABASE_URL="${{ secrets.DATABASE_URL }}"
+          BETTER_AUTH_SECRET="${{ secrets.BETTER_AUTH_SECRET }}"
+          BETTER_AUTH_URL="${{ secrets.BETTER_AUTH_URL }}"
+          GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}"
+          GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}"
+          EOF
+      - name: Migrate database
+        run: |
+          pnpm drizzle-kit migrate
       - name: Deploy with rsync
         run: |
           rsync -avz --chown=:www-data .output/ /var/www/ai-chat-new
           if [ -d /var/www/ai-chat-old ]; then rm -rf /var/www/ai-chat-old; fi
           if [ -d /var/www/ai-chat ]; then mv /var/www/ai-chat /var/www/ai-chat-old; fi
           mv /var/www/ai-chat-new /var/www/ai-chat
+      - name: Reload PM2 on server
+        run: |
+          cd /var/www/ai-chat
+          pm2 reload server/index.mjs --update-env
