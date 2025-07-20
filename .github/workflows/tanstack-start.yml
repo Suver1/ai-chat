@@ -1,0 +1,38 @@
+name: Deploy Tanstack Start site to self-hosted server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: 'ai-chat-deploy'
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+      - name: Ensure pnpm is installed
+        run: |
+          if ! command -v pnpm >/dev/null 2>&1; then
+            npm install -g pnpm@10
+          fi
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build Tanstack Start app
+        run: pnpm run build
+      - name: Deploy with rsync
+        run: |
+          rsync -avz --chown=:www-data .output/ /var/www/ai-chat-new
+          if [ -d /var/www/ai-chat-old ]; then rm -rf /var/www/ai-chat-old; fi
+          if [ -d /var/www/ai-chat ]; then mv /var/www/ai-chat /var/www/ai-chat-old; fi
+          mv /var/www/ai-chat-new /var/www/ai-chat
