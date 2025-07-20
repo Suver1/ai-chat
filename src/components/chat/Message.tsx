@@ -77,9 +77,6 @@ export default function Message() {
       } else {
         try {
           chatId = await generateChatId({
-            data: {
-              userId: '2f643d7f-ffe9-4b0a-87ba-40198838805a',
-            },
             signal: ctrl.signal,
           })
         } catch (error) {
