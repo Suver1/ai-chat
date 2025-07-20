@@ -43,6 +43,9 @@ jobs:
           EOF
       - name: Migrate database
         run: |
+          cat <<EOF > .env
+          DATABASE_URL="${{ secrets.DATABASE_URL }}"
+          EOF
           pnpm drizzle-kit migrate
       - name: Deploy with rsync
         run: |
@@ -51,6 +54,9 @@ jobs:
           if [ -d /var/www/ai-chat ]; then mv /var/www/ai-chat /var/www/ai-chat-old; fi
           mv /var/www/ai-chat-new /var/www/ai-chat
       - name: Reload PM2 on server
+        # Note 1: restart does not reload config, so we need to stop and start - this will cause downtime
+        # Note 2: reload does not ensure env are reloaded, so restart is better
         run: |
           cd /var/www/ai-chat
-          pm2 reload server/index.mjs --update-env
+          pm2 delete ai-chat
+          env $(cat .env.production | grep -v \"#\" | xargs) pm2 start ecosystem.config.cjs

@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build && tsc --noEmit",
+    "postbuild": "cp ecosystem.config.cjs .output/",
     "start": "node .output/server/index.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
