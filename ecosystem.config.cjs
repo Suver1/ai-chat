@@ -14,6 +14,9 @@ module.exports = {
       error_file: '~/.pm2/ai-chat/error.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       combine_logs: true,
+      env: {
+        PORT: 3010,
+      },
     },
   ],
 }
