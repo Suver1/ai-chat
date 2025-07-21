@@ -1,6 +1,6 @@
-import { socialSignIn, useSession, socialSignOut } from '~/auth/authClient'
+import { useSession } from '~/auth/authClient'
 import Loader from '../loader'
-import { useCallback, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 
 export default function Auth() {
@@ -24,16 +24,6 @@ export default function Auth() {
         <div>
           Logged in as
           <br />
-          <Link
-            to="/$"
-            className="link"
-            onClick={(e) => {
-              e.preventDefault()
-              socialSignOut()
-            }}
-          >
-            {`<-`}
-          </Link>{' '}
           <Link to="/profile">{data.user.name || data.user.email}</Link>
         </div>
       ) : (

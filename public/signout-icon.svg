@@ -1,0 +1,14 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g>
+    <!-- Door (rectangle) -->
+    <rect x="10" y="16" width="40" height="64" rx="8" fill="none" stroke="#c6a0f6" stroke-width="7"/>
+    <!-- Arrow border (base color, behind arrow) -->
+    <path d="M70 48h-32" stroke="#24273a" stroke-width="11" stroke-linecap="round"/>
+    <path d="M70 48l-12-12" stroke="#24273a" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M70 48l-12 12" stroke="#24273a" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Arrow (logout, mauve, visually centered) -->
+    <path d="M70 48h-32" stroke="#c6a0f6" stroke-width="8" stroke-linecap="round"/>
+    <path d="M70 48l-12-12" stroke="#c6a0f6" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M70 48l-12 12" stroke="#c6a0f6" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
