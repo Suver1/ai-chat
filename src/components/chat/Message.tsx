@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from '@tanstack/react-router'
-import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react'
+import { ChangeEvent, useCallback, useRef, useState } from 'react'
 import z from 'zod/v4'
 import { SubmitButton, TextAreaSimple } from '~/components/form'
 import { ModelName, modelNameSchema, models } from '~/constants/ai-models'
@@ -9,6 +9,7 @@ import { useChatListStore } from '~/state/chatList'
 import { isErrorChunk, parseErrorChunk } from '~/utils/stream'
 import { extractTextAndSummary } from '~/utils/string'
 import useSelectedModel from '~/hooks/useModel'
+import useEnterPress from '~/hooks/useEnterPress'
 import { messageSchema } from '~/utils/input'
 import { SUMMARY_START } from '~/constants/summary'
 
@@ -16,8 +17,8 @@ export default function Message() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [canSubmit, setCanSubmit] = useState(true)
   const [error, setError] = useState('')
-  const formRef = useRef<HTMLFormElement>(null)
-  const textAreaRef = useRef<HTMLTextAreaElement>(null)
+  const formRef = useRef<HTMLFormElement | null>(null)
+  const textAreaRef = useRef<HTMLTextAreaElement | null>(null)
   const appendMessage = useChatStore((state) => state.appendMessage)
   const addMessage = useChatStore((state) => state.addMessage)
   const setIsChatLoading = useChatStore((state) => state.setIsLoading)
@@ -28,23 +29,6 @@ export default function Message() {
 
   const location = useLocation()
   const navigate = useNavigate()
-
-  useEffect(() => {
-    const textArea = textAreaRef.current
-    if (!textArea) return
-
-    const keydownHandler = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault()
-        handleStreamSubmit()
-      }
-    }
-
-    textArea.addEventListener('keydown', keydownHandler)
-    return () => {
-      textArea.removeEventListener('keydown', keydownHandler)
-    }
-  }, [])
 
   const handleModelChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
     updateSelectedModel(e.target.value as ModelName)
@@ -197,6 +181,8 @@ export default function Message() {
       stripSummary,
     ]
   )
+
+  useEnterPress(textAreaRef, handleStreamSubmit)
 
   return (
     <form ref={formRef} onSubmit={handleStreamSubmit}>
