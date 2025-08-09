@@ -2,11 +2,11 @@ import { Link } from '@tanstack/react-router'
 import { useChatListStore } from '~/state/chatList'
 import Loader from '../loader'
 
-export default function ChatList() {
-  const chatList = useChatListStore((state) => state.chatList)
+export default function ChatHistory() {
+  const chatHistory = useChatListStore((state) => state.chatList)
   const isLoading = useChatListStore((state) => state.isLoading)
   const error = useChatListStore((state) => state.error)
-  console.log('chatList', chatList)
+  console.log('chatList', chatHistory)
 
   return (
     <>
@@ -16,9 +16,9 @@ export default function ChatList() {
           Error: Failed to load history
         </p>
       )}
-      {chatList && chatList.length > 0 && (
+      {chatHistory && chatHistory.length > 0 && (
         <ul className="list-none p-0 m-0">
-          {chatList.map((chat) => (
+          {chatHistory.map((chat) => (
             <li key={chat.chatId} className="">
               <Link
                 // @ts-expect-error path exists due to wildcard route

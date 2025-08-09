@@ -2,8 +2,8 @@ import { useChatStore } from '~/state/chat'
 import { Button } from '../form/Button'
 import { useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import ChatList from '../chatList/ChatList'
-import Auth from '../auth/Auth'
+import ChatHistory from '../chatHistory/ChatHistory'
+import AuthPanel from '../auth/AuthPanel'
 
 export default function Menu() {
   const clearMessages = useChatStore((state) => state.clearMessages)
@@ -30,10 +30,10 @@ export default function Menu() {
           </div>
         </div>
         <div>
-          <ChatList />
+          <ChatHistory />
         </div>
         <div>
-          <Auth />
+          <AuthPanel />
         </div>
       </div>
     </div>

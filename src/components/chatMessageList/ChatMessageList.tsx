@@ -8,7 +8,7 @@ const isChatNotFound = (error: unknown) => {
   return false
 }
 
-export default function ChatMessages() {
+export default function ChatMessageList() {
   const history = useChatStore((state) => state.history)
   const isLoading = useChatStore((state) => state.isLoading)
   const error = useChatStore((state) => state.error)

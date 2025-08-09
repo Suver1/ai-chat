@@ -3,7 +3,7 @@ import Loader from '../loader'
 import { useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 
-export default function Auth() {
+export default function AuthPanel() {
   const { data, isPending, error } = useSession()
   console.log('Session:', { data, isPending, error })
 

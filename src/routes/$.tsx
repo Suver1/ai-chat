@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import Chat from '~/components/chat/Chat'
-import ChatMessages from '~/components/chat/ChatMessages'
+import ChatPromptContainer from '~/components/chatPrompt/ChatPromptContainer'
+import ChatMessageList from '~/components/chatMessageList/ChatMessageList'
 import Menu from '~/components/menu/Menu'
 import PageNotFound from '~/components/PageNotFound'
 
@@ -23,14 +23,14 @@ function Home() {
           <div className="absolute overflow-y-scroll inset-0">
             <div className="mx-auto flex w-full flex-col h-svh max-w-3xl">
               <div className="" style={{ paddingBottom: 160 }}>
-                <ChatMessages />
+                <ChatMessageList />
               </div>
             </div>
           </div>
         </div>
         <div className="absolute bottom-0 w-full z-2 pr-4">
           <div className="relative max-w-3xl mx-auto">
-            <Chat />
+            <ChatPromptContainer />
           </div>
         </div>
       </main>
