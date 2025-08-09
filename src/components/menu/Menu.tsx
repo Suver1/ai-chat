@@ -5,7 +5,11 @@ import { useNavigate } from '@tanstack/react-router'
 import ChatHistory from '../chatHistory/ChatHistory'
 import AuthPanel from '../auth/AuthPanel'
 
-export default function Menu() {
+type Props = {
+  onNavigate?: () => void
+}
+
+export default function Menu({ onNavigate }: Props) {
   const clearMessages = useChatStore((state) => state.clearMessages)
   const navigate = useNavigate()
 
@@ -14,7 +18,8 @@ export default function Menu() {
     clearMessages()
     // @ts-ignore /new exists due to wildcard route
     navigate({ to: '/new', replace: true })
-  }, [clearMessages, navigate])
+    onNavigate?.()
+  }, [clearMessages, navigate, onNavigate])
 
   return (
     <div className="p-4 h-full">
@@ -30,7 +35,7 @@ export default function Menu() {
           </div>
         </div>
         <div>
-          <ChatHistory />
+          <ChatHistory onNavigate={onNavigate} />
         </div>
         <div>
           <AuthPanel />

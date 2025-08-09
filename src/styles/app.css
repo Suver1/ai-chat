@@ -59,6 +59,14 @@
   --chat-input-border: var(--surface1);
   --error: var(--red);
   --link: var(--blue);
+  --focus-ring: var(--lavender);
+  --bubble-user-bg: var(--mauve);
+  --bubble-user-fg: var(--base);
+  --bubble-ai-bg: var(--surface1);
+  --bubble-ai-fg: var(--text);
+  --border-subtle: var(--surface1);
+  --border-strong: var(--surface2);
+  --prompt-height: 0px; /* updated dynamically */
 }
 
 .bg-primary {
@@ -107,4 +115,84 @@
 .link:hover {
   color: hsla(var(--link) / 0.8);
   text-decoration: none;
+}
+
+/* Focus ring utility */
+.focus-ring:focus-visible {
+  outline: 2px solid hsl(var(--focus-ring));
+  outline-offset: 2px;
+}
+
+/* Sidebar slide transition */
+.sidebar-transition {
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+/* Chat bubbles */
+.chat-bubble-user {
+  background: hsl(var(--bubble-user-bg));
+  color: hsl(var(--bubble-user-fg));
+  border-radius: 1rem;
+  padding: 0.5rem 0.75rem;
+  max-width: 80%;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.chat-bubble-ai {
+  background: hsl(var(--bubble-ai-bg));
+  color: hsl(var(--bubble-ai-fg));
+  border-radius: 1rem;
+  padding: 0.5rem 0.75rem;
+  max-width: 80%;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* Surface background utility for hover (using existing token) */
+.bg-surface1\/40 {
+  /* Tailwind-like custom utility; fallback simple rgba */
+  background-color: hsla(var(--surface1) / 0.4);
+}
+
+/* Ensure last message visible by allowing dynamic padding based on prompt height */
+
+/* Live region for streaming updates */
+[aria-live] {
+  /* ensure region can receive focus for SR navigation if needed */
+  position: relative;
+}
+
+/* Buttons & interactive */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button:not(:disabled):hover {
+  filter: brightness(1.05);
+}
+
+select:focus-visible,
+textarea:focus-visible,
+input:focus-visible,
+button:focus-visible {
+  outline: 2px solid hsl(var(--focus-ring));
+  outline-offset: 2px;
+}
+
+textarea,
+select,
+input {
+  background: hsl(var(--chat-input-background));
+  color: hsl(var(--chat-input-foreground));
+  border: 1px solid hsl(var(--border-subtle));
+}
+
+textarea::placeholder {
+  color: hsla(var(--chat-input-foreground) / 0.6);
+}
+/* Textarea autogrow (handled via small JS helper). Base styling only here. */
+textarea[data-autogrow='true'] {
+  min-height: 2.5rem;
 }

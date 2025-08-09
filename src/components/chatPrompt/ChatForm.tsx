@@ -13,7 +13,7 @@ import useEnterPress from '~/hooks/useEnterPress'
 import { messageSchema } from '~/utils/input'
 import { SUMMARY_START } from '~/constants/summary'
 
-export default function Message() {
+export default function Message({ disabled = false }: { disabled?: boolean }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [canSubmit, setCanSubmit] = useState(true)
   const [error, setError] = useState('')
@@ -185,7 +185,11 @@ export default function Message() {
   useEnterPress(textAreaRef, handleStreamSubmit)
 
   return (
-    <form ref={formRef} onSubmit={handleStreamSubmit}>
+    <form
+      ref={formRef}
+      onSubmit={handleStreamSubmit}
+      className={disabled ? 'pointer-events-none select-none' : ''}
+    >
       {error && (
         <div className="error mb-0.5" role="alert">
           {error}
@@ -205,6 +209,8 @@ export default function Message() {
             name="model"
             value={selectedModel}
             onChange={handleModelChange}
+            className="p-2 rounded-md border focus-ring"
+            disabled={disabled}
           >
             {models.map((model) => (
               <option key={model.name} value={model.name}>
@@ -216,7 +222,7 @@ export default function Message() {
         <SubmitButton
           label="Send"
           isSubmitting={isSubmitting}
-          canSubmit={canSubmit}
+          canSubmit={canSubmit && !disabled}
         />
       </div>
     </form>

@@ -2,7 +2,9 @@ import { Link } from '@tanstack/react-router'
 import { useChatListStore } from '~/state/chatList'
 import Loader from '../loader'
 
-export default function ChatHistory() {
+type Props = { onNavigate?: () => void }
+
+export default function ChatHistory({ onNavigate }: Props) {
   const chatHistory = useChatListStore((state) => state.chatList)
   const isLoading = useChatListStore((state) => state.isLoading)
   const error = useChatListStore((state) => state.error)
@@ -23,7 +25,8 @@ export default function ChatHistory() {
               <Link
                 // @ts-expect-error path exists due to wildcard route
                 to={`/chat/${chat.chatId}`}
-                className="block p-2 rounded-md"
+                className="block p-2 rounded-md hover:bg-surface1/40 focus-ring transition-colors"
+                onClick={() => onNavigate?.()}
               >
                 {chat.name}
               </Link>
